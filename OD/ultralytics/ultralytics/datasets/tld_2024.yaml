@@ -1,0 +1,34 @@
+# Ultralytics YOLO 🚀, AGPL-3.0 license
+# COCO 2017 dataset http://cocodataset.org by Microsoft
+# Example usage: yolo train data=tld_2024.yaml
+# parent
+# ├── ultralytics
+# └── datasets
+#     └── TLD_2024 ← downloads here
+
+
+# Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
+path: ../datasets/TLD_2024  # dataset root dir
+train: train  # train images (relative to 'path') 
+val: val # val images (relative to 'path')
+test: test  # test images (relative to 'path') 
+
+
+# Classes
+names:
+  0: veh_go
+  1: veh_goLeft
+  2: veh_noSign
+  3: veh_stop
+  4: veh_stopLeft
+  5: veh_stopWarning
+  6: veh_warning
+  7: ped_go
+  8: ped_noSign
+  9: ped_stop
+  10: bus_go
+  11: bus_noSign
+  12: bus_stop
+  13: bus_warning
+  
+fliplr: 0.0  # image flip left-right (probability)
