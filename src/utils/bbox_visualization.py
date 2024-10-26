@@ -34,13 +34,13 @@ def draw_bbox(path_image:str, path_bbox:str, dict_label:dict, path_output:str=No
         bboxes = f.readlines()
     
     # Draw bounding box
-    for bbox in bboxes:
+    for bbox in bboxes: 
         # parsing
         label, x, y, w, h = list(map(float, bbox.split(' ')))
         label = dict_label[int(label)]
         x, y, w, h = convert_to_absol(image.shape, (x,y,w,h))
         # draw
-        cv2.rectangle(image, (x, y), (x + w, y + h), color=(0, 0, 255), thickness=2)
+        cv2.rectangle(image, (x-w//2, y-h//2), (x + w//2, y + h//2), color=(0, 0, 255), thickness=2)
         label_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)[0]
         label_x, label_y = x, y - 10  # 라벨이 bounding box 위에 위치하도록 함
         cv2.rectangle(image, (label_x, label_y - label_size[1]), (label_x + label_size[0], label_y), (0, 0, 255), cv2.FILLED)
@@ -61,9 +61,9 @@ def draw_bbox(path_image:str, path_bbox:str, dict_label:dict, path_output:str=No
 
 # 예시
 if __name__ == "__main__":
-    path_image = '/home/snaiws/Storage/ninja-turtles/Data/raw/train/images/00000000.jpg'
-    path_bbox = '/home/snaiws/Storage/ninja-turtles/Data/raw/train/labels/00000000.txt'
-    path_label = "/home/snaiws/Storage/ninja-turtles/Data/raw/train/classes.txt"
+    path_image = "/workspace/Storage/ninja-turtles/Data/OD/test_labeled/0.0.2/images/10006591.jpg"
+    path_bbox = "/workspace/Storage/ninja-turtles/Data/OD/test_labeled/0.0.2/labels/10006591.txt"
+    path_label = "/workspace/Storage/ninja-turtles/Data/OD/raw/train/classes.txt"
     with open(path_label, 'r') as f:
         dict_label = dict(enumerate([x.strip() for x in f.readlines()]))
     draw_bbox(path_image = path_image, path_bbox = path_bbox, dict_label = dict_label, path_output="output_image.jpg")
