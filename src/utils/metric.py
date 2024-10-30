@@ -5,7 +5,7 @@ from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 import json
 
-def eval_mAP50_COCO(path_gt_COCO:str, path_pred_COCO:str) -> float:
+def eval_mAP50_COCO(path_gt_COCO:str, path_pred_COCO:str, cat:bool = False) -> float:
     """
     두 데이터셋(gt_file, pred_file)을 COCO 방식의 mAP50으로 비교하는 함수
     알고리즘에 따라 mAP50의 결과가 다를 수 있으므로 COCO방식으로 맞추는 것이 좋다.
@@ -23,13 +23,25 @@ def eval_mAP50_COCO(path_gt_COCO:str, path_pred_COCO:str) -> float:
     # COCO 평가 객체 생성
     coco_eval = COCOeval(coco_gt, coco_pred, iouType='bbox')
     
-    # 평가 수행
-    coco_eval.evaluate()
-    coco_eval.accumulate()
-    coco_eval.summarize()
+    if not cat:
+        # 평가 수행
+        coco_eval.evaluate()
+        coco_eval.accumulate()
+        coco_eval.summarize()
+        
+        # mAP50 값 추출
+        mAP50 = coco_eval.stats[1]  # stats[1]은 IoU=0.5에서의 mAP
     
-    # mAP50 값 추출
-    mAP50 = coco_eval.stats[1]  # stats[1]은 IoU=0.5에서의 mAP
+    else:
+        mAP50 = {}
+        for cat_id in coco_gt.getCatIds():
+            # 카테고리별 평가 설정
+            cat_name = coco_gt.loadCats(cat_id)[0]['name']
+            coco_eval.params.catIds = [cat_id]
+            coco_eval.evaluate()
+            coco_eval.accumulate()
+            coco_eval.summarize()
+            mAP50[cat_name] = coco_eval.stats[1]
 
     return mAP50
 
@@ -115,6 +127,7 @@ def yolo_to_COCO(path_yolo:str, path_COCO:str, pred=False) -> bool:
 
     return True
 
+
 if __name__ == "__main__":
     path_yolo = "/workspace/Storage/ninja-turtles/Data/OD/test_labeled/0.0.2"
     path_COCO = "/workspace/Storage/ninja-turtles/Data/OD/test_labeled/0.0.2/COCO.json"
@@ -129,5 +142,5 @@ if __name__ == "__main__":
     pred_file_path = "/workspace/Storage/ninja-turtles/Data/OD/pred_OD_baseline_test_sample1/COCO.json"
 
     # # mAP50 계산
-    mAP50_score = eval_mAP50_COCO(gt_file_path, pred_file_path)
+    mAP50_score = eval_mAP50_COCO(gt_file_path, pred_file_path, True)
     print(f"mAP@IoU=0.5: {mAP50_score}")
