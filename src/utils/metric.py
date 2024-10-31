@@ -1,4 +1,5 @@
 import os
+import copy
 
 import json
 import cv2
@@ -13,11 +14,27 @@ class COCO_handler:
         self.path_pred_yolo = path_pred_yolo
         self.path_gt_COCO = path_gt_COCO
         self.path_pred_COCO = path_pred_COCO
+        self.class_names = ['veh_go', 'veh_goLeft', 'veh_noSign', 'veh_stop', 
+            'veh_stopLeft', 'veh_stopWarning', 'veh_warning', 
+            'ped_go', 'ped_noSign', 'ped_stop', 'bus_go', 
+            'bus_noSign', 'bus_stop', 'bus_warning']
+        self.class_names = dict(enumerate(self.class_names))
         if os.path.exists(path_gt_COCO):
-            self.yolo_to_COCO(path_yolo = path_gt_yolo, path_COCO = path_gt_COCO)
+            self.yolo_to_COCO(path_yolo = path_gt_yolo, path_COCO = path_gt_COCO, class_names = self.class_names)
         if os.path.exists(path_pred_COCO):
-            self.yolo_to_COCO(path_yolo = path_pred_yolo, path_COCO = path_pred_COCO, pred = True)
+            self.yolo_to_COCO(path_yolo = path_pred_yolo, path_COCO = path_pred_COCO, class_names = self.class_names, pred = True)
 
+        self.coco_gt, self.coco_eval = self.get_COCO(path_gt_COCO, path_pred_COCO)
+
+
+    def get_COCO(self, path_gt_COCO, path_pred_COCO):
+        # COCO API를 사용해 Ground Truth와 Prediction 파일 로드
+        coco_gt = COCO(path_gt_COCO) # json 경로만 받음
+        coco_pred = coco_gt.loadRes(path_pred_COCO) # np.ndarray와 str을 받는데, gt를 path로 받으니 str로
+        
+        # COCO 평가 객체 생성
+        coco_eval = COCOeval(coco_gt, coco_pred, iouType='bbox')
+        return coco_gt, coco_eval
 
     def eval_mAP50_COCO(self) -> float:
         """
@@ -30,24 +47,14 @@ class COCO_handler:
         출력:
             float: mAP@IoU=threshold_mAP 점수
         """
-
-        path_gt_COCO = self.path_gt_COCO
-        path_pred_COCO = self.path_pred_COCO
-
-        # COCO API를 사용해 Ground Truth와 Prediction 파일 로드
-        coco_gt = COCO(path_gt_COCO) # json 경로만 받음
-        coco_pred = coco_gt.loadRes(path_pred_COCO) # np.ndarray와 str을 받는데, gt를 path로 받으니 str로
-        
-        # COCO 평가 객체 생성
-        coco_eval = COCOeval(coco_gt, coco_pred, iouType='bbox')
-        
+        coco_gt = self.coco_gt
+        coco_eval = copy.deepcopy(self.coco_eval)
         # 평가 수행
         mAP50 = {}
+        # mAP50 값 추출
         coco_eval.evaluate()
         coco_eval.accumulate()
         coco_eval.summarize()
-        
-        # mAP50 값 추출
         mAP50['total'] = coco_eval.stats[1]  # stats[1]은 IoU=0.5에서의 mAP
     
         for cat_id in coco_gt.getCatIds():
@@ -62,7 +69,7 @@ class COCO_handler:
         return mAP50
 
 
-    def yolo_to_COCO(self, path_yolo:str, path_COCO:str, pred=False) -> bool:
+    def yolo_to_COCO(self, path_yolo:str, path_COCO:str, class_names, pred=False) -> bool:
         """
         yolo 방식으로 저장된 label 디렉토리를 통해 COCO json 생성
         입력:
@@ -86,14 +93,10 @@ class COCO_handler:
         
         # 카테고리 정보 추가
         
-        class_names = ['veh_go', 'veh_goLeft', 'veh_noSign', 'veh_stop', 
-            'veh_stopLeft', 'veh_stopWarning', 'veh_warning', 
-            'ped_go', 'ped_noSign', 'ped_stop', 'bus_go', 
-            'bus_noSign', 'bus_stop', 'bus_warning']
-        for idx, class_name in enumerate(class_names):
+        for idx in class_names:
             coco_format["categories"].append({
                 "id": idx,
-                "name": class_name
+                "name": class_names[idx]
             })
             
         annotation_id = 1
