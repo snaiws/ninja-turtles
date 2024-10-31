@@ -1,3 +1,5 @@
+import os
+
 import cv2
 import matplotlib.pyplot as plt
 
@@ -36,7 +38,7 @@ def draw_bbox(path_image:str, path_bbox:str, dict_label:dict, path_output:str=No
     # Draw bounding box
     for bbox in bboxes: 
         # parsing
-        label, x, y, w, h = list(map(float, bbox.split(' ')))
+        label, x, y, w, h = list(map(float, bbox.split(' ')))[:5]
         label = dict_label[int(label)]
         x, y, w, h = convert_to_absol(image.shape, (x,y,w,h))
         # draw
@@ -53,6 +55,7 @@ def draw_bbox(path_image:str, path_bbox:str, dict_label:dict, path_output:str=No
         cv2.destroyAllWindows()
     # 이미지 저장 (옵션)
     else:
+        os.makedirs(os.path.dirname(path_output), exist_ok=True)
         cv2.imwrite(path_output, image)
 
     return image
