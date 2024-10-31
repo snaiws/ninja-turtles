@@ -19,9 +19,9 @@ class COCO_handler:
             'ped_go', 'ped_noSign', 'ped_stop', 'bus_go', 
             'bus_noSign', 'bus_stop', 'bus_warning']
         self.class_names = dict(enumerate(self.class_names))
-        if os.path.exists(path_gt_COCO):
+        if not os.path.exists(path_gt_COCO):
             self.yolo_to_COCO(path_yolo = path_gt_yolo, path_COCO = path_gt_COCO, class_names = self.class_names)
-        if os.path.exists(path_pred_COCO):
+        if not os.path.exists(path_pred_COCO):
             self.yolo_to_COCO(path_yolo = path_pred_yolo, path_COCO = path_pred_COCO, class_names = self.class_names, pred = True)
 
         self.coco_gt, self.coco_eval = self.get_COCO(path_gt_COCO, path_pred_COCO)
